@@ -66,36 +66,15 @@ def newPublisher():
 
 	sub.mainloop()
 
-def accBorrower(bor_name,bor_phone,bor_addr):
-	accBor_conn = sqlite3.connect('LMS.db')
-
-	accBor_curr = accBor_conn.cursor()
-
-	accBor_curr.execute("INSERT INTO BORROWER VALUES (NULL, :bor_name, :bor_phone, :bor_addr) ",
-		{
-			'bor_name': bor_name.get(),
-			'bor_phone': bor_phone.get(),
-			'bor_addr': bor_addr.get()
-		})
-	query = "SELECT Card_No FROM BORROWER WHERE Name = 'William Chen'"
-	
-	print("Your card number:", accBor_curr.execute("SELECT Card_No FROM BORROWER WHERE Name = :bor_name AND Address = :bor_addr AND Phone = :bor_phone",
-		{
-			'bor_name': bor_name.get(),
-			'bor_addr': bor_addr.get(),
-			'bor_phone': bor_phone.get()
-		}).fetchone())
-
-	#commit changes
-	accBor_conn.commit()
-	#close the DB connection
-	accBor_conn.close()
-
 def newBorrower():
 	sub = Tk()
 	
 	sub.title("New Borrower")
 	sub.geometry("400x400")
+
+	accBor_conn = sqlite3.connect('LMS.db')
+
+	accBor_curr = accBor_conn.cursor()
 
 	bor_name = Entry(sub, width = 30)
 	bor_name.grid(row = 0, column = 1)
@@ -115,10 +94,45 @@ def newBorrower():
 	bor_addr_label = Label(sub, text = 'Borrower Addr: ')
 	bor_addr_label.grid(row = 2, column = 0)
 
-	submit_btn2 = Button(sub, text =' Add Borrower', command = lambda: accBorrower(bor_name,bor_phone,bor_addr))
+	def accBorrower():
+		print("accBorrower called")
+		print(bor_name.get())
+		print(bor_phone.get())
+		print(bor_addr.get())
+		accBor_curr.execute("INSERT INTO BORROWER VALUES (NULL, :bor_name, :bor_addr, :bor_phone ) ",
+			{
+				'bor_name': bor_name.get(),
+				'bor_phone': bor_phone.get(),
+				'bor_addr': bor_addr.get()
+			})
+		printBorrower()
+	
+	def printBorrower():
+		print("printBorrower called")
+		print(bor_name.get())
+		print(bor_phone.get())
+		print(bor_addr.get())
+		text1 = "Your Card number: "
+		text1 += str(accBor_curr.execute("SELECT Card_No FROM BORROWER WHERE Name = :bor_name AND Address = :bor_addr AND Phone = :bor_phone",
+			{
+				'bor_name': bor_name.get(),
+				'bor_addr': bor_addr.get(),
+				'bor_phone': bor_phone.get()
+			}).fetchone())
+		print(text1)
+		result_label = Label(root, text = text1)
+		result_label.grid(row = 20, column  = 0)
+
+		cancelBorrower()
+	def cancelBorrower():
+		accBor_conn.commit()
+		accBor_conn.close()
+		sub.destroy()
+
+	submit_btn2 = Button(sub, text =' Add Borrower', command = lambda: [accBorrower()])
 	submit_btn2.grid(row = 3, column = 1, columnspan = 1, pady = 10, padx = 10, ipadx = 140)
 
-	acc_Borrower_btn = Button(sub, text ='Cancel      ', command = sub.destroy)
+	acc_Borrower_btn = Button(sub, text ='Cancel      ', command = lambda: cancelBorrower())
 	acc_Borrower_btn.grid(row = 4, column = 1, columnspan = 1, pady = 10, padx = 10, ipadx = 140)
 
 	sub.mainloop()
