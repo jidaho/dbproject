@@ -66,6 +66,106 @@ def newPublisher():
 
 	sub.mainloop()
 
+def newBook():
+	sub = Tk()
+	
+	sub.title("New Book")
+	sub.geometry("400x400")
+
+	book_auth = Entry(sub, width = 30)
+	book_auth.grid(row = 0, column = 1)
+
+	book_title = Entry(sub, width = 30)
+	book_title.grid(row = 1, column = 1)
+
+	book_publisher = Entry(sub, width = 30)
+	book_publisher.grid(row = 2, column = 1)
+
+	book_id = Entry(sub, width = 30)
+	book_id.grid(row = 3, column = 1)
+
+	book_auth_label = Label(sub, text = 'Book Author: ')
+	book_auth_label.grid(row = 0, column = 0)
+
+	book_title_label = Label(sub, text = 'Book Title: ')
+	book_title_label.grid(row = 1, column = 0)
+
+	book_publisher_label = Label(sub, text = 'Book Publisher: ')
+	book_publisher_label.grid(row = 2, column = 0)
+
+	book_id_label = Label(sub, text = 'Book ID: ')
+	book_id_label.grid(row = 3, column = 0)
+
+	def accBook(book_auth,book_title,book_publisher,book_id):
+		accBook_conn = sqlite3.connect('LMS.db')
+		accBook_curr = accBook_conn.cursor()
+
+		accBook_curr.execute("INSERT INTO BOOK VALUES (:book_id, :book_title, :book_publisher) ",
+			{	
+				'book_id': book_id.get(),
+				'book_title': book_title.get(),
+				'book_publisher': book_publisher.get()
+			})
+		
+		accBook_curr.execute("INSERT INTO BOOK_AUTHORS VALUES (:book_id, :book_auth) ",
+			{	
+				'book_id': book_id.get(),
+				'book_auth': book_auth.get()
+			})
+		
+		branches = accBook_curr.execute("SELECT Branch_Id FROM LIBRARY_BRANCH").fetchall()
+
+		for branch in branches:
+			branch_id = branch[0]
+			accBook_curr.execute("INSERT INTO BOOK_COPIES VALUES (:book_id, :branch_id, :no_of_copies) ",
+					{
+						'book_id': book_id.get(),
+						'branch_id': branch_id,
+						'no_of_copies': 5
+					})
+			
+		#commit changes
+		accBook_conn.commit()
+		#close the DB connection
+		accBook_conn.close()
+
+	def listBooks(book_title):
+		accBook_conn = sqlite3.connect('LMS.db')
+		accBook_curr = accBook_conn.cursor()
+
+		# Given a book title list the number of copies loaned out per branch.
+		text2 = accBook_curr.execute(" SELECT Branch_Name, COUNT(*) FROM BOOK_LOANS NATURAL JOIN LIBRARY_BRANCH NATURAL JOIN BOOK NATURAL JOIN BOOK COPIES WHERE Title =:book_title GROUP BY Branch_Name",
+			{
+				'book_title': book_title.get(),
+			})
+		
+		results = accBook_curr.fetchall()
+
+		for result in results:
+			print(result[0] + ": " + str(result[1]))
+
+		cancelBook()
+
+		#commit changes
+		accBook_conn.commit()
+		#close the DB connection
+		accBook_conn.close()
+
+	def cancelBook():
+		sub.destroy()
+		
+
+	submit_btn3 = Button(sub, text =' Add New Book', command = lambda: accBook(book_auth,book_title,book_publisher,book_id))
+	submit_btn3.grid(row = 4, column = 1, columnspan = 1, pady = 10, padx = 10, ipadx = 140)
+
+	submit_btn4 = Button(sub, text =' List Copies', command = lambda: listBooks(book_title))
+	submit_btn4.grid(row = 5, column = 1, columnspan = 1, pady = 10, padx = 10, ipadx = 140)
+
+	acc_Book_btn = Button(sub, text ='Cancel      ', command = sub.destroy)
+	acc_Book_btn.grid(row = 6, column = 1, columnspan = 1, pady = 10, padx = 10, ipadx = 140)
+
+	sub.mainloop()
+
 def newBorrower():
 	sub = Tk()
 	
@@ -218,7 +318,6 @@ def newAuthor():
 	accLN_conn = sqlite3.connect('LMS.db')
 	accLN_curr = accLN_conn.cursor()
 
-
 	bk_ID = Entry(sub, width = 30)
 	bk_ID.grid(row = 0, column = 1)
 
@@ -234,18 +333,19 @@ def newAuthor():
 	submit_btn2 = Button(sub, text =' Add Author', command = lambda: accAuthor())
 	submit_btn2.grid(row = 3, column = 1, columnspan = 1, pady = 10, padx = 10, ipadx = 140)
 
-	acc_Borrower_btn = Button(sub, text ='Cancel      ', command = cancelAuthor())
+	acc_Borrower_btn = Button(sub, text ='Cancel      ', command = cancelAuthor()) # fix this later
 	acc_Borrower_btn.grid(row = 4, column = 1, columnspan = 1, pady = 10, padx = 10, ipadx = 140)
 
 	sub.mainloop()
 
 	def accAuthor():
-		accBor_curr.execute("INSERT INTO BOOK_AUTHORS VALUES (:bk_ID, :auth_name )",
-			{
-				'bk_ID': bk_ID.get(),
-				'auth_name': auth_name.get(),
-			})
-		cancelAuthor()
+			accLN_curr.execute("INSERT INTO BOOK_AUTHORS VALUES (:bk_ID, :auth_name )",
+				{
+					'bk_ID': bk_ID.get(),
+					'auth_name': auth_name.get(),
+				})
+			cancelAuthor()
+
 	def cancelAuthor():
 		accLN_conn.commit()
 		accLN_conn.close()
@@ -260,6 +360,8 @@ loan_label = Label(root, text = 'Loan')
 loan_label.grid(row = 4, column =0)
 author_label = Label(root, text = 'Author')
 author_label.grid(row = 5, column = 0)
+book_label = Label(root, text = 'Books')
+book_label.grid(row = 6, column = 0)
 
 new_Publisher_btn = Button(root, text ='Add Publisher ', command = newPublisher)
 new_Publisher_btn.grid(row = 0, column =1, columnspan = 2, pady = 10, padx = 10, ipadx = 140)
@@ -272,6 +374,9 @@ new_Loan_btn.grid(row = 4, column = 1, columnspan = 2, pady = 10, padx = 10, ipa
 
 new_Author_btn = Button(root, text = 'Add Author ', command = newAuthor)
 new_Author_btn.grid(row = 5, column = 1, columnspan = 2, pady = 10, padx = 10, ipadx = 140)
+
+new_Book_btn = Button(root, text ='Add Book ', command = newBook)
+new_Book_btn.grid(row = 6, column =2, columnspan = 2, pady = 10, padx = 10, ipadx = 140)
 
 #update_Publisher_btn = Button(root, text ='Update Publisher ', command = submit)
 #update_Publisher_btn.grid(row = 0, column =1, columnspan = 2, pady = 10, padx = 10, ipadx = 140)
