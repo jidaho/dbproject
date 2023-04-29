@@ -213,7 +213,11 @@ def newAuthor():
 	sub = Tk()
 	
 	sub.title("New Author")
-	sub.geometry("400x400")
+	sub.geometry("400x1000")
+
+	accLN_conn = sqlite3.connect('LMS.db')
+	accLN_curr = accLN_conn.cursor()
+
 
 	bk_ID = Entry(sub, width = 30)
 	bk_ID.grid(row = 0, column = 1)
@@ -227,13 +231,25 @@ def newAuthor():
 	auth_name_label = Label(sub, text = 'Author Name: ')
 	auth_name_label.grid(row = 1, column = 0)
 
-	submit_btn2 = Button(sub, text =' Add Author', command = lambda: accBorrower(bor_name,bor_phone,bor_addr))
+	submit_btn2 = Button(sub, text =' Add Author', command = lambda: accAuthor())
 	submit_btn2.grid(row = 3, column = 1, columnspan = 1, pady = 10, padx = 10, ipadx = 140)
 
-	acc_Borrower_btn = Button(sub, text ='Cancel      ', command = sub.destroy)
+	acc_Borrower_btn = Button(sub, text ='Cancel      ', command = cancelAuthor())
 	acc_Borrower_btn.grid(row = 4, column = 1, columnspan = 1, pady = 10, padx = 10, ipadx = 140)
 
 	sub.mainloop()
+
+	def accAuthor():
+		accBor_curr.execute("INSERT INTO BOOK_AUTHORS VALUES (:bk_ID, :auth_name )",
+			{
+				'bk_ID': bk_ID.get(),
+				'auth_name': auth_name.get(),
+			})
+		cancelAuthor()
+	def cancelAuthor():
+		accLN_conn.commit()
+		accLN_conn.close()
+		sub.destroy()
 
 
 f_name_label = Label(root, text = 'Publisher')
