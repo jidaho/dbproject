@@ -220,9 +220,7 @@ def newBorrower():
 				'bor_phone': bor_phone.get()
 			}).fetchone())
 		print(text1)
-		result_label = Label(root, text = text1)
-		result_label.grid(row = 20, column  = 0)
-
+		result_label.config(text = text1)
 		cancelBorrower()
 	def cancelBorrower():
 		accBor_conn.commit()
@@ -351,6 +349,69 @@ def newAuthor():
 		accLN_conn.close()
 		sub.destroy()
 
+def viewLoanBK():
+	sub = Tk()
+	sub.title("List Borrowed Books")
+	sub.geometry("400x400")
+
+	LoanBK_conn = sqlite3.connect('LMS.db')
+
+	LoanBK_curr = LoanBK_conn.cursor()
+
+	bwer_ID = Entry(sub, width = 30)
+	bwer_ID.grid(row = 0, column = 1)
+
+	bwer_name = Entry(sub, width = 30)
+	bwer_name.grid(row = 1, column = 1)
+
+	bwer_ID_label = Label(sub, text = 'Borrower ID:')
+	bwer_ID_label.grid(row = 0, column = 0)
+
+	bwer_name_label = Label(sub, text = 'Borrower Name:')
+	bwer_name_label.grid(row = 1, column = 0)
+
+	def viewLoans():
+		nones = 0
+		conditions = ' '
+		print(bwer_ID.get())
+		print(bwer_name.get())
+		if len(bwer_ID.get()) == 0:
+			nones += 1
+		else:
+			conditions += str("Card_No = " + bwer_ID.get())
+
+		if len(bwer_name.get()) == 0:
+			nones += 1
+		else:
+			if nones == 0:
+				conditions += " AND "
+			conditions += str("[Borrower Name] LIKE '%" + bwer_name.get() + "%'")
+
+		if nones < 2:
+			conditions = "WHERE" + conditions
+		elif nones == 2:
+			conditions = "Order By LateFeeBalance DESC"
+		conditions = "Select Card_No, [Borrower Name], LateFeeBalance from vBookLoanInfo " + conditions
+		print(conditions)
+		LoanBK_curr.execute(conditions)
+		results = LoanBK_curr.fetchall()
+		printLoans(results)
+	def printLoans(results):
+		record = "Card_No | Borrower Name | LateFeeBalance\n"
+		for result in results:
+			record += str(str(result[0]).ljust(10) + " | " + str(result[1]).ljust(15) + " | " + str("%.2f" % float(result[2])) + "\n")
+		result_label.config(text = record)
+		cancel()
+	def cancel():
+		LoanBK_conn.commit()
+		LoanBK_conn.close()
+		sub.destroy()
+
+	submit_btn = Button(sub, text = 'List Loans', command = lambda: viewLoans())
+	submit_btn.grid(row = 2, column = 1, columnspan = 1, pady = 10, padx = 10, ipadx = 140)
+
+	cancel_btn = Button(sub, text = 'Cancel', command = lambda: cancel())
+	cancel_btn.grid(row = 3, column = 1, columnspan = 1, pady = 10, padx = 10, ipadx = 140)
 
 f_name_label = Label(root, text = 'Publisher')
 f_name_label.grid(row =0, column = 0)
@@ -377,6 +438,9 @@ new_Author_btn.grid(row = 5, column = 1, columnspan = 2, pady = 10, padx = 10, i
 
 new_Book_btn = Button(root, text ='Add Book ', command = newBook)
 new_Book_btn.grid(row = 6, column =2, columnspan = 2, pady = 10, padx = 10, ipadx = 140)
+
+result_label = Label(root, text = '')
+result_label.grid(row = 20, column = 0)
 
 #update_Publisher_btn = Button(root, text ='Update Publisher ', command = submit)
 #update_Publisher_btn.grid(row = 0, column =1, columnspan = 2, pady = 10, padx = 10, ipadx = 140)
