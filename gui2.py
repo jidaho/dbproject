@@ -218,7 +218,7 @@ def newBorrower():
 				'bor_name': bor_name.get(),
 				'bor_addr': bor_addr.get(),
 				'bor_phone': bor_phone.get()
-			}).fetchone())
+			}).fetchone()[0])
 		print(text1)
 		result_label.config(text = text1)
 		cancelBorrower()
