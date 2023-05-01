@@ -134,23 +134,26 @@ def newBook():
 		accBook_curr = accBook_conn.cursor()
 
 		# Given a book title list the number of copies loaned out per branch.
-		text2 = accBook_curr.execute(" SELECT Branch_Name, COUNT(*) FROM BOOK_LOANS NATURAL JOIN LIBRARY_BRANCH NATURAL JOIN BOOK NATURAL JOIN BOOK COPIES WHERE Title =:book_title GROUP BY Branch_Name",
+		accBook_curr.execute(" SELECT Branch_Name, COUNT(*) FROM BOOK_LOANS NATURAL JOIN LIBRARY_BRANCH NATURAL JOIN BOOK NATURAL JOIN BOOK COPIES WHERE Title =:book_title GROUP BY Branch_Name",
 			{
 				'book_title': book_title.get(),
 			})
 		
 		results = accBook_curr.fetchall()
 
-		for result in results:
-			print(result[0] + ": " + str(result[1]))
+		print_result = 'Branch | Num Copies\n'
 
+		for result in results:
+			print_result += str(result[0] + ": " + str(result[1]) + "\n")
+		print(print_result)
+		result_label.config(text = print_result)
+		root.update_idletasks()
 		cancelBook()
 
 		#commit changes
 		accBook_conn.commit()
 		#close the DB connection
 		accBook_conn.close()
-
 	def cancelBook():
 		sub.destroy()
 		
