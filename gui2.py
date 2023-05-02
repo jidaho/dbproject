@@ -376,14 +376,14 @@ def newAuthor():
 		accLN_conn.close()
 		sub.destroy()
 
-def viewLoanBK():
+def viewLoanBWR():
 	sub = Tk()
 	sub.title("List Borrowed Books")
 	sub.geometry("400x400")
 
-	LoanBK_conn = sqlite3.connect('LMS.db')
+	LoanBWR_conn = sqlite3.connect('LMS.db')
 
-	LoanBK_curr = LoanBK_conn.cursor()
+	LoanBWR_curr = LoanBWR_conn.cursor()
 
 	bwer_ID = Entry(sub, width = 30)
 	bwer_ID.grid(row = 0, column = 1)
@@ -420,18 +420,19 @@ def viewLoanBK():
 			conditions = "Order By LateFeeBalance DESC"
 		conditions = "Select Card_No, [Borrower Name], LateFeeBalance from vBookLoanInfo " + conditions
 		print(conditions)
-		LoanBK_curr.execute(conditions)
-		results = LoanBK_curr.fetchall()
+		LoanBWR_curr.execute(conditions)
+		results = LoanBWR_curr.fetchall()
 		printLoans(results)
 	def printLoans(results):
 		record = "Card_No | Borrower Name | LateFeeBalance\n"
 		for result in results:
-			record += str(str(result[0]).ljust(10) + " | " + str(result[1]).ljust(15) + " | " + str("%.2f" % float(result[2])) + "\n")
+			record += str(str(result[0]).ljust(10) + " | " + str(result[1]).ljust(15) + " | " + str("$%.2f" % float(result[2])) + "\n")
 		result_label.config(text = record)
+		root.update_idletasks()
 		cancel()
 	def cancel():
-		LoanBK_conn.commit()
-		LoanBK_conn.close()
+		LoanBWR_conn.commit()
+		LoanBWR_conn.close()
 		sub.destroy()
 
 	submit_btn = Button(sub, text = 'List Loans', command = lambda: viewLoans())
@@ -459,6 +460,12 @@ new_Borrower_btn.grid(row = 1, column =1, columnspan = 2, pady = 10, padx = 10, 
 
 new_Loan_btn = Button(root, text ='Add Loan ', command = newLoan)
 new_Loan_btn.grid(row = 4, column = 1, columnspan = 2, pady = 10, padx = 10, ipadx = 140)
+
+view_Loan_bwr_btn = Button(root, text = 'View By Borrower', command = viewLoanBWR)
+view_Loan_bwr_btn.grid(row = 4, column = 2, columnspan = 1, pady = 10, padx = 10, ipadx = 150);
+
+view_Loan_bk_btn = Button(root, text = 'View by Book', command = viewLoanBK)
+view_Loan_bk_btn.grid(row = 4, column = 3, columnspan = 1, pady = 10, padx = 10, ipadx = 150);
 
 new_Author_btn = Button(root, text = 'Add Author ', command = newAuthor)
 new_Author_btn.grid(row = 5, column = 1, columnspan = 2, pady = 10, padx = 10, ipadx = 140)
