@@ -246,26 +246,7 @@ def newBorrower():
 
 	sub.mainloop()
 
-def accLoan(loan_bkID, loan_bchID, loan_cardNo, loan_date_ot, loan_date_du, loan_date_rtn):
-	accLN_conn = sqlite3.connect('LMS.db')
-
-	accLN_curr = accLN_conn.cursor()
-
-	accLN_curr.execute("INSERT INTO BOOK_LOANS VALUES (:loan_bkID, :loan_bchID, :loan_cardNo, :loan_date_ot, :loan_date_du, :loan_date_rtn, NULL) ",
-		{
-			'loan_bkID': loan_bkID.get(),
-			'loan_bchID': loan_bchID.get(),
-			'loan_cardNo': loan_cardNo.get(),
-			'loan_date_ot': loan_date_ot.get(),
-			'loan_date_du': loan_date_du.get(),
-			'loan_date_rtn': loan_date_rtn.get()
-		})
-
-	#commit changes
-	accLN_conn.commit()
-	#close the DB connection
-	accLN_conn.close()
-
+# newLoan
 def newLoan():
 	sub = Tk()
 
@@ -308,15 +289,50 @@ def newLoan():
 	loan_date_rtn_label = Label(sub, text = 'Date Returned: ')
 	loan_date_rtn_label.grid(row = 5, column = 0)
 
-	submit_btn = Button(sub, text =' Add Loan', command = lambda: accLoan(loan_bkID, loan_bchID, loan_cardNo, 
-																			   loan_date_ot, loan_date_du, loan_date_rtn))
+	submit_btn = Button(sub, text =' Add Loan', command = lambda: accLoan())
 	submit_btn.grid(row = 6, column = 1, columnspan = 1, pady = 10, padx = 10, ipadx = 140)
 
 	acc_Borrower_btn = Button(sub, text ='Cancel ', command = sub.destroy)
 	acc_Borrower_btn.grid(row = 7, column = 1, columnspan = 1, pady = 10, padx = 10, ipadx = 140)
 
-	sub.mainloop()
+	
+	def accLoan():
+		accLN_conn = sqlite3.connect('LMS.db')
 
+		accLN_curr = accLN_conn.cursor()
+
+		accLN_curr.execute("INSERT INTO BOOK_LOANS VALUES (:loan_bkID, :loan_bchID, :loan_cardNo, :loan_date_ot, :loan_date_du, :loan_date_rtn, NULL) ",
+			{
+				'loan_bkID': loan_bkID.get(),
+				'loan_bchID': loan_bchID.get(),
+				'loan_cardNo': loan_cardNo.get(),
+				'loan_date_ot': loan_date_ot.get(),
+				'loan_date_du': loan_date_du.get(),
+				'loan_date_rtn': loan_date_rtn.get()
+			})
+
+		accLN_curr.execute("UPDATE BOOK_COPIES SET No_Of_Copies = No_Of_Copies - 1 WHERE Book_Id = :loan_bkID AND Branch_Id = :bchID",
+			{
+				'loan_bkID': loan_bkID.get(),
+				'bchID': loan_bchID.get()
+
+			})
+		updated = accLN_curr.execute("SELECT * FROM BOOK_COPIES").fetchall()
+
+		updated_copies = "Book_Id | Branch_Id | No_Of_Copies\n"
+		for copy in updated:
+			updated_copies += str(str(copy[0]) + " | " + str(copy[1]) + " | " + str(copy[2]) + "\n")
+		print(updated_copies)
+		result_label.config(text = updated_copies)
+		root.update_idletasks()
+
+		#commit changes
+		accLN_conn.commit()
+		#close the DB connection
+		accLN_conn.close()
+		sub.destroy()
+
+	sub.mainloop()
 
 def newAuthor():
 	sub = Tk()
