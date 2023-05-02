@@ -391,21 +391,31 @@ def viewLoanBWR():
 	bwer_name = Entry(sub, width = 30)
 	bwer_name.grid(row = 1, column = 1)
 
+	date_start = Entry(sub, width = 30)
+	date_start.grid(row = 2, column = 1)
+	
+	date_end = Entry(sub, width = 30)
+	date_end.grid(row = 3, column = 1)
+
 	bwer_ID_label = Label(sub, text = 'Borrower ID:')
 	bwer_ID_label.grid(row = 0, column = 0)
 
 	bwer_name_label = Label(sub, text = 'Borrower Name:')
 	bwer_name_label.grid(row = 1, column = 0)
 
+	range_start_label = Label(sub, text = 'Date Start: ')
+	range_start_label.grid(row = 2, column = 0)
+
+	range_end_label = Label(sub, text = 'Date End: ')
+	range_end_label.grid(row = 3, column = 0)
+
 	def viewLoans():
 		nones = 0
 		conditions = ' '
-		print(bwer_ID.get())
-		print(bwer_name.get())
 		if len(bwer_ID.get()) == 0:
 			nones += 1
 		else:
-			conditions += str("Card_No = " + bwer_ID.get())
+			conditions += str("AND Card_No = " + bwer_ID.get())
 
 		if len(bwer_name.get()) == 0:
 			nones += 1
@@ -414,11 +424,25 @@ def viewLoanBWR():
 				conditions += " AND "
 			conditions += str("[Borrower Name] LIKE '%" + bwer_name.get() + "%'")
 
-		if nones < 2:
-			conditions = "WHERE" + conditions
-		elif nones == 2:
-			conditions = "Order By LateFeeBalance DESC"
-		conditions = "Select Card_No, [Borrower Name], LateFeeBalance from vBookLoanInfo " + conditions
+		if len(date_start.get()) == 0:
+			nones += 1
+		else:
+			if nones <= 2:
+				conditions += " AND "
+			conditions += str("Date_Out >= '" + date_start.get() + "'")
+
+		if len(date_end.get()) == 0:
+			nones += 1
+		else: 
+			if nones <= 4:
+				conditions += " AND "
+			conditions += str("Due_Date <= '" + date_end.get() + "'")
+
+		if nones < 4:
+			conditions = "WHERE [Number of days later return] > 0 AND " + conditions
+		elif nones == 4:
+			conditions = "WHERE [Number of days later return] > 0 Order By LateFeeBalance DESC"
+		conditions = "Select Card_No, [Borrower Name], [Number of days later return], LateFeeBalance from vBookLoanInfo " + conditions
 		print(conditions)
 		LoanBWR_curr.execute(conditions)
 		results = LoanBWR_curr.fetchall()
@@ -436,10 +460,10 @@ def viewLoanBWR():
 		sub.destroy()
 
 	submit_btn = Button(sub, text = 'List Loans', command = lambda: viewLoans())
-	submit_btn.grid(row = 2, column = 1, columnspan = 1, pady = 10, padx = 10, ipadx = 140)
+	submit_btn.grid(row = 4, column = 1, columnspan = 1, pady = 10, padx = 10, ipadx = 140)
 
 	cancel_btn = Button(sub, text = 'Cancel', command = lambda: cancel())
-	cancel_btn.grid(row = 3, column = 1, columnspan = 1, pady = 10, padx = 10, ipadx = 140)
+	cancel_btn.grid(row = 5, column = 1, columnspan = 1, pady = 10, padx = 10, ipadx = 140)
 
 f_name_label = Label(root, text = 'Publisher')
 f_name_label.grid(row =0, column = 0)
