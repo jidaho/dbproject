@@ -416,7 +416,7 @@ def viewLoanBWR():
 		if len(bwer_ID.get()) == 0:
 			nones += 1
 		else:
-			conditions += str("AND Card_No = " + bwer_ID.get())
+			conditions += str("Card_No = " + bwer_ID.get())
 
 		if len(bwer_name.get()) == 0:
 			nones += 1
