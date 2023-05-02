@@ -10,7 +10,7 @@ root = Tk()
 
 root.title('Library Database Management System')
 
-root.geometry("400x400")
+root.geometry("1300x400")
 
 
 LMS_connect = sqlite3.connect('LMS.db')
@@ -161,31 +161,6 @@ def newBook():
 		#commit changes
 		accBook_conn.commit()
 		#close the DB connection
-		accBook_conn.close()
-
-	def viewBooks(book_auth,book_title,book_publisher,book_id):
-		accBook_conn = sqlite3.connect('LMS.db')
-		accBook_curr = accBook_conn.cursor()
-
-		conds = ''
-		if len(book_id.get()) > 0:
-			conds = f"WHERE [book Title] = Title AND Book_Id = {book_id.get()}"
-		elif len(book_title.get()) > 0:
-			conds = f"WHERE [book Title] = Title AND Title LIKE '%{book_title.get()}%'"
-
-		conds += ' ORDER BY LateFeeBalance DESC'
-
-		accBook_curr.execute(f"SELECT Title, CASE WHEN LateFeeBalance = 0.00 THEN 'Non-Applicable' ELSE '$'||printf('%.2f', LateFeeBalance) END AS LateFeeBalance FROM vBookLoanInfo, BOOK {conds}")
-		lines = accBook_curr.fetchall()
-
-		txt = "Book Title | Late Fee Balance \n"
-		for line in lines:
-			txt += f"{line[0].ljust(30)} | {line[1].ljust(15)}\n"
-		result_label2.config(text=txt)
-
-		# commit changes
-		accBook_conn.commit()
-		# close the DB connection
 		accBook_conn.close()
 	
 	def cancelBook():
@@ -453,14 +428,14 @@ def viewLoanBWR():
 		if len(date_start.get()) == 0:
 			nones += 1
 		else:
-			if nones <= 2:
+			if nones < 2:
 				conditions += " AND "
 			conditions += str("Date_Out >= '" + date_start.get() + "'")
 
 		if len(date_end.get()) == 0:
 			nones += 1
 		else: 
-			if nones <= 4:
+			if nones < 3:
 				conditions += " AND "
 			conditions += str("Due_Date <= '" + date_end.get() + "'")
 
@@ -491,6 +466,98 @@ def viewLoanBWR():
 	cancel_btn = Button(sub, text = 'Cancel', command = lambda: cancel())
 	cancel_btn.grid(row = 5, column = 1, columnspan = 1, pady = 10, padx = 10, ipadx = 140)
 
+def viewLoanBK():
+	sub = Tk()
+	sub.title("List Borrowed Books")
+	sub.geometry("400x400")
+
+	LoanBK_conn = sqlite3.connect('LMS.db')
+
+	LoanBK_curr = LoanBK_conn.cursor()
+	
+	book_id = Entry(sub, width = 30)
+	book_id.grid(row = 0, column = 1)
+
+	book_title = Entry(sub, width = 30)
+	book_title.grid(row = 1, column = 1)
+
+	date_start = Entry(sub, width = 30)
+	date_start.grid(row = 2, column = 1)
+	
+	date_end = Entry(sub, width = 30)
+	date_end.grid(row = 3, column = 1)
+
+	book_id_label = Label(sub, text = 'Book ID: ')
+	book_id_label.grid(row = 0, column = 0)
+
+	book_title_label = Label(sub, text = 'Book Title: ')
+	book_title_label.grid(row = 1, column = 0)
+
+	range_start_label = Label(sub, text = 'Date Start: ')
+	range_start_label.grid(row = 2, column = 0)
+
+	range_end_label = Label(sub, text = 'Date End: ')
+	range_end_label.grid(row = 3, column = 0)
+
+
+	submit_btn = Button(sub, text = 'List Loans', command = lambda: viewBooks())
+	submit_btn.grid(row = 4, column = 1, columnspan = 1, pady = 10, padx = 10, ipadx = 140)
+
+	cancel_btn = Button(sub, text = 'Cancel', command = lambda: cancel())
+	cancel_btn.grid(row = 5, column = 1, columnspan = 1, pady = 10, padx = 10, ipadx = 140)
+
+
+	def viewBooks():
+		accBook_conn = sqlite3.connect('LMS.db')
+		accBook_curr = accBook_conn.cursor()
+
+		conds = ' '
+		nones = 0
+		if len(book_id.get()) == 0:
+			nones += 1
+		else:
+			conditions += str("Book_Id = " + book_id.get())
+		
+		if len(book_title.get()) == 0:
+			nones += 1
+		else:
+			if nones == 0:
+				conds += " AND "
+			conds += str("[Title] LIKE '%" + book_title.get() + "%'")
+
+		if len(date_start.get()) == 0:
+			nones += 1
+		else:
+			if nones < 2:
+				conds += ' AND '
+			conds += str("Date_Out >= '" + date_start.get() + "'")
+		if len(date_end.get()) == 0:
+			nones += 1
+		else:
+			if nones < 3:
+				conds += " AND "
+			conds += str("Due_Date <= '" + date_end.get() + "'")
+
+		if nones < 4:
+			conds = "WHERE [Number of days later return] > 0 AND [Book Title] = Title AND" + conds
+		elif nones == 4:
+			conds = "WHERE [Number of days later return] > 0 AND [Book Title] = Title Order by LateFeeBalance DESC"
+		print(conds)
+
+		accBook_curr.execute(f"SELECT Title, CASE WHEN LateFeeBalance = 0.00 THEN 'Non-Applicable' ELSE '$'||printf('%.2f', LateFeeBalance) END AS LateFeeBalance FROM vBookLoanInfo, BOOK {conds}")
+		lines = accBook_curr.fetchall()
+		print(lines)
+
+		txt = "Book Title | Late Fee Balance \n"
+		for line in lines:
+			txt += f"{line[0].ljust(30)} | {line[1].ljust(15)}\n"
+		result_label.config(text=txt)
+		cancel()
+	def cancel():
+		LoanBK_conn.commit()
+		LoanBK_conn.close()
+		sub.destroy()
+
 f_name_label = Label(root, text = 'Publisher')
 f_name_label.grid(row =0, column = 0)
 b1_label = Label(root, text = 'Borrower')
@@ -503,13 +570,13 @@ book_label = Label(root, text = 'Books')
 book_label.grid(row = 6, column = 0)
 
 new_Publisher_btn = Button(root, text ='Add Publisher ', command = newPublisher)
-new_Publisher_btn.grid(row = 0, column =1, columnspan = 2, pady = 10, padx = 10, ipadx = 140)
+new_Publisher_btn.grid(row = 0, column =1, columnspan = 1, pady = 10, padx = 10, ipadx = 140)
 
 new_Borrower_btn = Button(root, text ='Add Borrower ', command = newBorrower)
-new_Borrower_btn.grid(row = 1, column =1, columnspan = 2, pady = 10, padx = 10, ipadx = 140)
+new_Borrower_btn.grid(row = 1, column =1, columnspan = 1, pady = 10, padx = 10, ipadx = 140)
 
 new_Loan_btn = Button(root, text ='Add Loan ', command = newLoan)
-new_Loan_btn.grid(row = 4, column = 1, columnspan = 2, pady = 10, padx = 10, ipadx = 140)
+new_Loan_btn.grid(row = 4, column = 1, columnspan = 1, pady = 10, padx = 10, ipadx = 150)
 
 view_Loan_bwr_btn = Button(root, text = 'View By Borrower', command = viewLoanBWR)
 view_Loan_bwr_btn.grid(row = 4, column = 2, columnspan = 1, pady = 10, padx = 10, ipadx = 150);
@@ -518,10 +585,10 @@ view_Loan_bk_btn = Button(root, text = 'View by Book', command = viewLoanBK)
 view_Loan_bk_btn.grid(row = 4, column = 3, columnspan = 1, pady = 10, padx = 10, ipadx = 150);
 
 new_Author_btn = Button(root, text = 'Add Author ', command = newAuthor)
-new_Author_btn.grid(row = 5, column = 1, columnspan = 2, pady = 10, padx = 10, ipadx = 140)
+new_Author_btn.grid(row = 5, column = 1, columnspan = 1, pady = 10, padx = 10, ipadx = 140)
 
 new_Book_btn = Button(root, text ='Add Book ', command = newBook)
-new_Book_btn.grid(row = 6, column =2, columnspan = 2, pady = 10, padx = 10, ipadx = 140)
+new_Book_btn.grid(row = 6, column = 1, columnspan = 1, pady = 10, padx = 10, ipadx = 140)
 
 result_label = Label(root, text = '')
 result_label.grid(row = 20, column = 0)
