@@ -162,6 +162,32 @@ def newBook():
 		accBook_conn.commit()
 		#close the DB connection
 		accBook_conn.close()
+
+	def viewBooks(book_auth,book_title,book_publisher,book_id):
+		accBook_conn = sqlite3.connect('LMS.db')
+		accBook_curr = accBook_conn.cursor()
+
+		conds = ''
+		if len(book_id.get()) > 0:
+			conds = f"WHERE [book Title] = Title AND Book_Id = {book_id.get()}"
+		elif len(book_title.get()) > 0:
+			conds = f"WHERE [book Title] = Title AND Title LIKE '%{book_title.get()}%'"
+
+		conds += ' ORDER BY LateFeeBalance DESC'
+
+		accBook_curr.execute(f"SELECT Title, CASE WHEN LateFeeBalance = 0.00 THEN 'Non-Applicable' ELSE '$'||printf('%.2f', LateFeeBalance) END AS LateFeeBalance FROM vBookLoanInfo, BOOK {conds}")
+		lines = accBook_curr.fetchall()
+
+		txt = "Book Title | Late Fee Balance \n"
+		for line in lines:
+			txt += f"{line[0].ljust(30)} | {line[1].ljust(15)}\n"
+		result_label2.config(text=txt)
+
+		# commit changes
+		accBook_conn.commit()
+		# close the DB connection
+		accBook_conn.close()
+	
 	def cancelBook():
 		sub.destroy()
 		
