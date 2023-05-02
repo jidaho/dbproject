@@ -123,11 +123,19 @@ def newBook():
 						'branch_id': branch_id,
 						'no_of_copies': 5
 					})
-			
+		book_copies = accBook_curr.execute("SELECT * FROM BOOK_COPIES").fetchall()
+		updated_copies = "Book_Id | Branch_Id | No_Of_Copies\n"
+		for copy in book_copies:
+			updated_copies += str(str(copy[0]) + " | " + str(copy[1]) + " | " + str(copy[2]) + "\n")
+		print(updated_copies)
+		result_label.config(text = updated_copies)
+		root.update_idletasks()
+		
 		#commit changes
 		accBook_conn.commit()
 		#close the DB connection
 		accBook_conn.close()
+		cancelBook()
 
 	def listBooks(book_title):
 		accBook_conn = sqlite3.connect('LMS.db')
